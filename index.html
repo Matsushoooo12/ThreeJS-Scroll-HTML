@@ -5,7 +5,7 @@
     body, html {
       margin: 0;
       padding: 0;
-      height: 10000vh; /* Adjust this value as needed */
+      height: 6000vh; /* Adjust this value as needed */
       overflow: auto;
       display: flex;
       align-items: center;
@@ -19,9 +19,18 @@
       width: 100%;
       height: 100vh;
     }
+    #counter{
+        position: fixed;
+        top: 64px;
+        left: 64px;
+        font-size: 64px;
+        font-weight: bold;
+        color: #fff;
+    }
   </style>
 
   <div id="canvas-container"></div>
+  <div id="counter">2023</div>
 
   <script src="https://threejs.org/build/three.js"></script>
   <script>
@@ -44,9 +53,58 @@
     }
     animate();
 
+    // Counter
+    // ターゲットを指定
+    const counter = document.getElementById('counter');
+
+    // スクロール位置を追跡するための変数
+    let lastScrollY = window.scrollY;
+
+   // 3Dモデルの色を設定する関数
+    function setColor(value) {
+        const minValue = 2023;
+        const maxValue = 3000;
+        const clampedValue = Math.max(minValue, Math.min(maxValue, value));
+        const normalizedValue = (clampedValue - minValue) / (maxValue - minValue);
+
+        // 青から赤へのグラデーション
+        const color = new THREE.Color();
+        color.r = normalizedValue;
+        color.g = 1 - normalizedValue;
+        color.b = 0;
+
+        cube.material.color = color;
+
+        // 透明度を設定
+        cube.material.transparent = true;
+        cube.material.opacity = 0.6;
+    }
+
+    // 非同期関数を設定
+    async function updateCounter(current, target) {
+        const step = current < target ? 1 : -1;
+        if (current !== target) {
+            const nextValue = current + step;
+            // カウンターの最小値を確認
+            if (nextValue >= 2023) {
+                counter.textContent = nextValue.toString();
+                setColor(nextValue);
+                setTimeout(() => updateCounter(nextValue, target), 10);
+            }
+        }
+    }
+
     window.addEventListener('scroll', function() {
       cube.rotation.x += 0.02;
       cube.rotation.y += 0.02;
+    // スクロール位置の差分を計算
+    const deltaY = window.scrollY - lastScrollY;
+
+    // カウンターの値を更新
+    const currentValue = parseInt(counter.textContent, 10);
+    const newValue = currentValue + Math.floor(deltaY / 50);
+    lastScrollY = window.scrollY;
+    updateCounter(currentValue, newValue);
     });
   </script>
 </body>
